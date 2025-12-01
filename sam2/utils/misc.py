@@ -185,7 +185,8 @@ def load_video_frames(
     is_bytes = isinstance(video_path, bytes)
     is_str = isinstance(video_path, str)
     is_mp4_path = is_str and os.path.splitext(video_path)[-1] in [".mp4", ".MP4"]
-    if is_bytes or is_mp4_path:
+    is_file_like = hasattr(video_path, 'read') and hasattr(video_path, 'seek') # ADDED BY US
+    if is_bytes or is_mp4_path or is_file_like: # ADDED BY US
         return load_video_frames_from_video_file(
             video_path=video_path,
             image_size=image_size,
@@ -293,6 +294,8 @@ def load_video_frames_from_video_file(
     # Get the original video height and width
     decord.bridge.set_bridge("torch")
     video_height, video_width, _ = decord.VideoReader(video_path).next().shape
+    if hasattr(video_path, 'seek'): # ADDED BY US
+        video_path.seek(0) # ADDED BY US
     # Iterate over all frames in the video
     images = []
     for frame in decord.VideoReader(video_path, width=image_size, height=image_size):
